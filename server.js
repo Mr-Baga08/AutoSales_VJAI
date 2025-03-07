@@ -4,6 +4,7 @@ const bodyParser = require('body-parser');
 const nodemailer = require('nodemailer');
 
 const app = express();
+// Use PORT from .env or default to 3000 for your HTTP server
 const port = process.env.PORT || 3000;
 
 app.use(bodyParser.json());
@@ -17,15 +18,17 @@ app.get('/', (req, res) => {
 app.post('/api/send-email', async (req, res) => {
   const { to, subject, message } = req.body;
 
+  // Validate required fields
   if (!to || !subject || !message) {
     return res.status(400).send('Missing required fields.');
   }
 
   // Create a Nodemailer transporter configured for Brevo SMTP
+  // Using port 587 (STARTTLS) and secure: false. Adjust if necessary.
   let transporter = nodemailer.createTransport({
     host: "smtp-relay.brevo.com",
-    port: 587,         // Use 587 for STARTTLS; alternatively try port 465 with secure: true
-    secure: false,     // false for STARTTLS on port 587; change to true for port 465
+    port: 587,
+    secure: false, // false for STARTTLS on port 587; try secure: true with port 465 if needed.
     auth: {
       user: process.env.EMAIL_USER,
       pass: process.env.EMAIL_PASS,
@@ -33,8 +36,9 @@ app.post('/api/send-email', async (req, res) => {
   });
 
   try {
+    // Use SENDER_EMAIL if defined; otherwise fall back to EMAIL_USER
     await transporter.sendMail({
-      from: `"Mrunal P" <${process.env.EMAIL_USER}>`,  // Use the verified sender from EMAIL_USER
+      from: `"Mrunal P" <${process.env.SENDER_EMAIL || process.env.EMAIL_USER}>`,
       to: to,
       subject: subject,
       text: message
@@ -46,7 +50,7 @@ app.post('/api/send-email', async (req, res) => {
   }
 });
 
-// Start the server
+// Start the HTTP server
 app.listen(port, () => {
   console.log(`Server running at http://localhost:${port}`);
 });
