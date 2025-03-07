@@ -1,0 +1,113 @@
+function generateSalesPitches() {
+  // 1. Define the source sheet name and get the spreadsheet and data
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sourceSheetName = "Sheet1"; // Change this if your source sheet has a different name
+  var sourceSheet = ss.getSheetByName(sourceSheetName); 
+  var targetSheet = ss.getSheetByName("Sales Pitches");
+
+  if (!sourceSheet) { 
+    SpreadsheetApp.getUi().alert("Source sheet named '" + sourceSheetName + "' not found.");
+    return;
+  }
+
+  // Read all data and build records
+  var data = sourceSheet.getDataRange().getValues();
+  var headers = data.shift(); // Remove header row
+  var records = data.map(function(row) {
+    return headers.reduce(function(obj, header, i) {
+      obj[header] = row[i];
+      return obj;
+    }, {});
+  });
+
+  // 2. Define the JMeterAI email template
+  var jmeterAIPitch = "Hi {First Name},\n\n" +
+    "I noticed you use JMeter, and I wanted to introduce you to *JMeterAI*, our AI-powered performance testing tool that takes performance testing to the next level.\n\n" +
+    "With J.ai, you can:\n" +
+    "⚡ *Automatically perform AI-based root-cause analysis*\n" +
+    "🔧 *Fix performance issues with actionable insights*\n" +
+    "📝 *Generate automated test plans using human language input* ✍️\n" +
+    "🚀 *Integrate seamlessly with Jenkins and Grafana*\n" +
+    "📊 *Receive automated performance updates via email*\n\n" +
+    "We’re launching soon, and I’d love to offer you *early access with a 20% discount*! Let’s connect for a quick chat, or you can join our waitlist here: [Learn more](https://example.com/waitlist).\n\n" +
+    "Looking forward to your thoughts.";
+
+  // 3. Prepare the output sheet "Sales Pitches"
+  if (!targetSheet) {
+    targetSheet = ss.insertSheet("Sales Pitches");
+    targetSheet.appendRow(["First Name", "Company Name for Emails", "Email", "Industry", "Sales Pitch"]);
+  } else {
+    // Clear all rows except header row
+    if (targetSheet.getLastRow() > 1) {
+      targetSheet.getRange(2, 1, targetSheet.getLastRow()-1, targetSheet.getLastColumn()).clearContent();
+    }
+  }
+
+  // 4. Function to send emails via the external relay service using UrlFetchApp
+  // NOTE: Replace the relayUrl with the public URL of your deployed relay service (e.g., from ngrok or your cloud provider).
+  function sendEmailViaRelay(to, subject, body) {
+    var relayUrl = 'https://1295-2405-201-a014-c84d-50be-172b-108c-28cf.ngrok-free.app/api/send-email'; 
+    var payload = {
+      from: 'Mrunal Test <mrunal.8.pattnaik@gmail.com>',
+      to: to,
+      subject: subject,
+      message: body  // "message" key is expected by the relay service
+    };
+    var options = {
+      method: 'post',
+      contentType: 'application/json',
+      payload: JSON.stringify(payload),
+      muteHttpExceptions: true
+    };
+
+    try {
+      var response = UrlFetchApp.fetch(relayUrl, options);
+      Logger.log('Relay response: ' + response.getContentText());
+    } catch (e) {
+      Logger.log('Error in relay call: ' + e.toString());
+    }
+  }
+
+  // 5. Function to get or create a sheet for a specific company
+  function getOrCreateCompanySheet(companyName) {
+    var sheet = ss.getSheetByName(companyName);
+    if (!sheet) {
+      sheet = ss.insertSheet(companyName);
+      sheet.appendRow(["First Name", "Company Name for Emails", "Email", "Industry", "Sales Pitch"]);
+    }
+    return sheet;
+  }
+
+  // 6. Process each record: Generate pitch, send email, and log output
+  records.forEach(function(record) {
+    // Create personalized pitch by replacing placeholders
+    var pitch = jmeterAIPitch
+      .replace(/{First Name}/g, record["First Name"])
+      .replace(/{Industry}/g, record["Industry"]);
+
+    // Set a subject line for the email; adjust as needed
+    var emailSubject = "Introducing JMeterAI for " + record["Company Name for Emails"];
+
+    // Send the email via the relay service
+    sendEmailViaRelay(record["Email"], emailSubject, pitch);
+
+    // Log the output to the main Sales Pitches sheet
+    targetSheet.appendRow([
+      record["First Name"],
+      record["Company Name for Emails"],
+      record["Email"],
+      record["Industry"],
+      pitch
+    ]);
+
+    // Also log the output to a company-specific sheet
+    var companySheet = getOrCreateCompanySheet(record["Company Name for Emails"]);
+    companySheet.appendRow([
+      record["First Name"],
+      record["Company Name for Emails"],
+      record["Email"],
+      record["Industry"],
+      pitch
+    ]);
+  });
+}
