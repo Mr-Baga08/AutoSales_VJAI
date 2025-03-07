@@ -1,5 +1,3 @@
-Below is an example README file (in Markdown format) that outlines all steps, requirements, and configuration details for using Brevo SMTP with your Node.js relay service.
-
 ---
 
 # Brevo SMTP Relay Service
