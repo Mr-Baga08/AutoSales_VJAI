@@ -48,7 +48,7 @@ function generateSalesPitches() {
   function sendEmailViaRelay(to, subject, body) {
     var relayUrl = 'https://1295-2405-201-a014-c84d-50be-172b-108c-28cf.ngrok-free.app/api/send-email'; 
     var payload = {
-      from: 'Mrunal Test <mrunal.8.pattnaik@gmail.com>',
+      from: 'Mrunal Test <your-email@example.com>',
       to: to,
       subject: subject,
       message: body  // "message" key is expected by the relay service
