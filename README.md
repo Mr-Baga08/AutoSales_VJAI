@@ -200,4 +200,6 @@ This README should help anyone understand the full setup and configuration requi
 
 
 To set up brevo SMTP: https://youtu.be/vjb6T1VpolE?si=B6Z3qNz5KneK4Fii
+
+
 To authenticate the user and add a domain for seamless operations: https://youtu.be/BEoF5Ny8rgs?si=1DCqphwc5XUu2oh7
